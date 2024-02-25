@@ -1,4 +1,4 @@
-# vaultmeister
+# Vaultmeister
 
 Vaultmeister is a [Matrix]-based password manager that implements [MSC4114].
 The application is a proof-of-concept and in experimental state. It should
