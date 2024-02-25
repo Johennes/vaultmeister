@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout revision
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        run: rustup toolchain install stable --profile minimal
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: yarn
+
+      - name: Install NPM dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Disable Next.js telemetry
+        run: yarn next telemetry disable
+
+      - name: Install remaining Tauri dependencies
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: |
+            libwebkit2gtk-4.0-dev
+            build-essential
+            curl
+            wget
+            file
+            libssl-dev
+            libgtk-3-dev
+            libayatana-appindicator3-dev
+            librsvg2-dev
+
+      - name: Build
+        run: yarn tauri build
