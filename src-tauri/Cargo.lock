@@ -4878,6 +4878,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "matrix-sdk",
+ "reqwest",
  "serde",
  "serde_json",
  "tauri",

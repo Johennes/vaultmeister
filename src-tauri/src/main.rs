@@ -7,30 +7,42 @@ use tauri::Url;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-  // Launch dendrite
-  let mut dendrite = process::Command::new("../dendrite-src/bin/dendrite")
+  launch_dendrite().await;
+
+  let _client = Client::new(Url::parse("localhost:8008")?).await?;
+
+  tauri::Builder::default()
+    .run(tauri::generate_context!())
+    .expect("tauri application should not cause error");
+
+  Ok(())
+}
+
+async fn launch_dendrite() {
+  // Request /versions to check if dendrite is already running (e.g. due to hot reload)
+  let running = match reqwest::get("http://localhost:8008/_matrix/client/versions").await {
+    Ok(response) => response.status().is_success(),
+    Err(_) => false
+  };
+
+  if running {
+    return;
+  }
+
+  // Start subprocess
+  let mut subprocess = process::Command::new("../dendrite-src/bin/dendrite")
     .arg("-config")
     .arg("../dendrite.yaml")
     .arg("-really-enable-open-registration")
     .spawn()
     .expect("dendrite should be running");
 
-  // Exit if dendrite dies
+  // Monitor subprocess and exit if it dies
   thread::spawn(move || {
-    let result = dendrite.wait();
+    let result = subprocess.wait();
     if result.is_err() || !result.unwrap().success() {
       eprintln!("dendrite should not exit");
       process::exit(1);
     }
   });
-
-  // Set up Matrix client
-  let _client = Client::new(Url::parse("localhost:8008")?).await?;
-
-  // Run tauri
-  tauri::Builder::default()
-    .run(tauri::generate_context!())
-    .expect("tauri application should not cause error");
-
-  Ok(())
 }
