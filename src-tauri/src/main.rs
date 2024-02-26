@@ -1,9 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{process::{self, ExitCode}, thread};
+use matrix_sdk::Client;
+use std::{process::{self}, thread};
+use tauri::Url;
 
-fn main() {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
   // Launch dendrite
   let mut dendrite = process::Command::new("../dendrite-src/bin/dendrite")
     .arg("-config")
@@ -21,8 +24,13 @@ fn main() {
     }
   });
 
+  // Set up Matrix client
+  let _client = Client::new(Url::parse("localhost:8008")?).await?;
+
   // Run tauri
   tauri::Builder::default()
     .run(tauri::generate_context!())
     .expect("tauri application should not cause error");
+
+  Ok(())
 }
