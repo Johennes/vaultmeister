@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dendrite:build": "scripts/build-dendrite.sh",
+    "dendrite:start": "scripts/start-dendrite.sh",
+    "dendrite:create-account": "scripts/create-account.sh",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
