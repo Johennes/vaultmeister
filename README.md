@@ -1,6 +1,7 @@
 # Vaultmeister
 
 ![Build](https://github.com/Johennes/vaultmeister/actions/workflows/build.yml/badge.svg?branch=main)
+![Lint](https://github.com/Johennes/vaultmeister/actions/workflows/lint.yml/badge.svg?branch=main)
 
 Vaultmeister is a [Matrix]-based password manager that implements [MSC4114].
 The application is a proof-of-concept and in experimental state. It should
