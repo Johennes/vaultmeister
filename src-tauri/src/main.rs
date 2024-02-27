@@ -9,9 +9,11 @@ use tauri::Url;
 async fn main() -> anyhow::Result<()> {
   launch_dendrite().await;
 
-  let _client = Client::new(Url::parse("localhost:8008")?).await?;
+  let client = Client::new(Url::parse("localhost:8008")?).await?;
 
   tauri::Builder::default()
+    .manage(client)
+    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in])
     .run(tauri::generate_context!())
     .expect("tauri application should not cause error");
 
@@ -45,4 +47,25 @@ async fn launch_dendrite() {
       process::exit(1);
     }
   });
+}
+
+#[tauri::command]
+fn version() -> String {
+  env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
+fn homeserver(client: tauri::State<Client>) -> String {
+  client.homeserver().to_string()
+}
+
+#[tauri::command]
+async fn sign_in(client: tauri::State<'_, Client>, username: String, password: String) -> Result<(), ()> {
+  let msg = match client.matrix_auth().login_username(username, &password).send().await {
+    Ok(response) => format!("{}", 200),
+    Err(error) => format!("{}", error),
+  };
+  // HTTP request construction failed: invalid format
+  println!("{}", msg);
+  Ok(())
 }
