@@ -4,32 +4,44 @@ import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri'
 import Input from '@/components/Input';
 
+class Status {
+  static initial = new Status(false, null);
+  static loading = new Status(true, null);
+  static error = (error: string) => new Status(false, error);
+
+  constructor(
+    readonly isLoading: boolean,
+    readonly error: string | null
+  ) {}
+}
+
 export default function Home() {
   const [version, setVersion] = useState("");
   const [homeServer, setHomeServer] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
+  
   useEffect(() => {
     invoke<string>("version")
-      .then(setVersion)
-      .catch(console.error)
+    .then(setVersion)
+    .catch(console.error)
     invoke<string>("homeserver")
-      .then(setHomeServer)
-      .catch(console.error)
+    .then(setHomeServer)
+    .catch(console.error)
   }, [])
-
+  
+  const [status, setStatus] = useState(Status.initial);
   const [username, setUsername] = useState("vaultmeister");
   const [password, setPassword] = useState("vaultmeister");
-
+  
   const signIn = () => {
-    setIsLoading(true);
+    setStatus(Status.loading);
     invoke("sign_in", { username, password })
-      .catch(console.error)
-      .finally(() => setIsLoading(false))
+      // TODO
+      // .then(() => ?)
+      .catch(error => setStatus(Status.error(error)))
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-10">
+    <main className="flex min-h-screen flex-col items-center justify-start pt-20 gap-10">
       <div>
         <h2 className="text-2xl font-semibold">
           Vaultmeister
@@ -38,15 +50,16 @@ export default function Home() {
       </div>
       <div>
         <Input type="text" placeholder="Home server" value={homeServer} disabled={true} />
-        <Input type="text" placeholder="Username" value={username} disabled={isLoading} onChange={e => setUsername(e.target.value)} />
-        <Input type="password" placeholder="Password" value={password} disabled={isLoading} onChange={e => setPassword(e.target.value)} />
+        <Input type="text" placeholder="Username" value={username} disabled={status.isLoading} onChange={e => setUsername(e.target.value)} />
+        <Input type="password" placeholder="Password" value={password} disabled={status.isLoading} onChange={e => setPassword(e.target.value)} />
         <input
           type="submit"
           className="block w-full rounded-md border-0 py-1.5 px-2 bg-green-700 hover:bg-green-800 text-white font-bold text-sm mb-1"
           value="Sign in"
-          disabled={isLoading}
+          disabled={status.isLoading}
           onClick={signIn} />
       </div>
+      {status.error && <div className="text-red-600 px-10 text-center">{status.error}123</div>}
     </main>
   );
 }
