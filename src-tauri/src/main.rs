@@ -66,6 +66,11 @@ fn homeserver(client: tauri::State<Client>) -> String {
 
 #[tauri::command]
 async fn sign_in(client: tauri::State<'_, Client>, username: String, password: String) -> Result<(), String> {
+  // Ensure that we're not signed in already as otherwise the SDK will panic and kill the thread
+  if client.session_meta().is_some() {
+    return Ok(());
+  }
+
   match client.matrix_auth().login_username(username, &password).send().await {
     Ok(_) => Ok(()),
     Err(error) => Err(error.to_string()),
