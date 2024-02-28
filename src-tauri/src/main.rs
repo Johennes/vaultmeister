@@ -9,7 +9,11 @@ use tauri::Url;
 async fn main() -> anyhow::Result<()> {
   launch_dendrite().await;
 
-  let client = Client::new(Url::parse("localhost:8008")?).await?;
+  let client = Client::builder()
+    .homeserver_url(Url::parse("https://localhost:8448")?)
+    .disable_ssl_verification()
+    .build()
+    .await?;
 
   tauri::Builder::default()
     .manage(client)
@@ -33,8 +37,9 @@ async fn launch_dendrite() {
 
   // Start subprocess
   let mut subprocess = process::Command::new("../dendrite-src/bin/dendrite")
-    .arg("-config")
-    .arg("../dendrite.yaml")
+    .arg("-config").arg("../dendrite.yaml")
+    .arg("-tls-cert").arg("../dendrite-data/server.crt")
+    .arg("-tls-key").arg("../dendrite-data/server.key")
     .arg("-really-enable-open-registration")
     .spawn()
     .expect("dendrite should be running");
@@ -60,12 +65,9 @@ fn homeserver(client: tauri::State<Client>) -> String {
 }
 
 #[tauri::command]
-async fn sign_in(client: tauri::State<'_, Client>, username: String, password: String) -> Result<(), ()> {
-  let msg = match client.matrix_auth().login_username(username, &password).send().await {
-    Ok(response) => format!("{}", 200),
-    Err(error) => format!("{}", error),
-  };
-  // HTTP request construction failed: invalid format
-  println!("{}", msg);
-  Ok(())
+async fn sign_in(client: tauri::State<'_, Client>, username: String, password: String) -> Result<(), String> {
+  match client.matrix_auth().login_username(username, &password).send().await {
+    Ok(_) => Ok(()),
+    Err(error) => Err(error.to_string()),
+  }
 }
