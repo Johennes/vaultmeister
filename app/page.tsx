@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri'
-import Input from '@/components/input';
+import Input from '@/components/Input';
 
 export default function Home() {
   const [version, setVersion] = useState("");
@@ -11,10 +11,10 @@ export default function Home() {
   useEffect(() => {
     invoke<string>("version")
       .then(setVersion)
-      .catch(console.error)
+      .catch(alert)
     invoke<string>("homeserver")
       .then(setHomeServer)
-      .catch(console.error)
+      .catch(alert)
   }, [])
 
   const [username, setUsername] = useState("vaultmeister");
@@ -23,7 +23,7 @@ export default function Home() {
   const signIn = () => {
     invoke("sign_in", { username, password })
       .then(x => alert(x))
-      .catch(e => alert(e))
+      .catch(alert)
   };
 
   return (
