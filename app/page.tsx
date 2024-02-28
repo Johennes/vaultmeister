@@ -7,23 +7,25 @@ import Input from '@/components/Input';
 export default function Home() {
   const [version, setVersion] = useState("");
   const [homeServer, setHomeServer] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     invoke<string>("version")
       .then(setVersion)
-      .catch(alert)
+      .catch(console.error)
     invoke<string>("homeserver")
       .then(setHomeServer)
-      .catch(alert)
+      .catch(console.error)
   }, [])
 
   const [username, setUsername] = useState("vaultmeister");
   const [password, setPassword] = useState("vaultmeister");
 
   const signIn = () => {
+    setIsLoading(true);
     invoke("sign_in", { username, password })
-      .then(x => alert(x))
-      .catch(alert)
+      .catch(console.error)
+      .finally(() => setIsLoading(false))
   };
 
   return (
@@ -36,12 +38,13 @@ export default function Home() {
       </div>
       <div>
         <Input type="text" placeholder="Home server" value={homeServer} disabled={true} />
-        <Input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} />
-        <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+        <Input type="text" placeholder="Username" value={username} disabled={isLoading} onChange={e => setUsername(e.target.value)} />
+        <Input type="password" placeholder="Password" value={password} disabled={isLoading} onChange={e => setPassword(e.target.value)} />
         <input
           type="submit"
           className="block w-full rounded-md border-0 py-1.5 px-2 bg-green-700 hover:bg-green-800 text-white font-bold text-sm mb-1"
           value="Sign in"
+          disabled={isLoading}
           onClick={signIn} />
       </div>
     </main>
