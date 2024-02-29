@@ -59,7 +59,9 @@
         "height": 600,
         "resizable": true,
         "title": "Vaultmeister",
-        "width": 800
+        "width": 800,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay"
       }
     ]
   }
