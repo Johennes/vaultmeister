@@ -2,9 +2,17 @@
 
 import { invoke } from "@tauri-apps/api/tauri";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Explorer(): JSX.Element {
   const router = useRouter();
+
+  useEffect(() => {
+    console.log('about to start sync');
+    invoke("start_sync")
+      .then(() => console.log("sync started"))
+      .catch(console.error);
+  }, []);
 
   const signOut = () => {
     invoke("sign_out")
