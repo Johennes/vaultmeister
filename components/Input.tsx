@@ -2,7 +2,7 @@ import { InputHTMLAttributes } from "react";
 
 export interface IInputProps extends InputHTMLAttributes<HTMLInputElement> {}
 
-export default function Input(props: IInputProps) {
+export default function Input(props: IInputProps): JSX.Element {
   return (
     <input
       type="text"

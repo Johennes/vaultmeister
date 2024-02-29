@@ -1,8 +1,9 @@
-'use client'
+"use client"
 
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri'
 import Input from '@/components/Input';
+import { useRouter } from 'next/navigation';
 
 class Status {
   static initial = new Status(false, null);
@@ -15,7 +16,7 @@ class Status {
   ) {}
 }
 
-export default function Home() {
+export default function Home(): JSX.Element {
   const [version, setVersion] = useState("");
   const [homeServer, setHomeServer] = useState("");
   
@@ -31,12 +32,13 @@ export default function Home() {
   const [status, setStatus] = useState(Status.initial);
   const [username, setUsername] = useState("vaultmeister");
   const [password, setPassword] = useState("vaultmeister");
+
+  const router = useRouter();
   
   const signIn = () => {
     setStatus(Status.loading);
     invoke("sign_in", { username, password })
-      // TODO
-      // .then(() => ?)
+      .then(() => router.push("/explorer"))
       .catch(error => setStatus(Status.error(error)))
   };
 

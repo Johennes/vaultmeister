@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
 
   tauri::Builder::default()
     .manage(client)
-    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in])
+    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out])
     .run(tauri::generate_context!())
     .expect("tauri application should not cause error");
 
@@ -74,5 +74,18 @@ async fn sign_in(client: tauri::State<'_, Client>, username: String, password: S
   match client.matrix_auth().login_username(username, &password).send().await {
     Ok(_) => Ok(()),
     Err(error) => Err(error.to_string()),
+  }
+}
+
+#[tauri::command]
+async fn sign_out(client: tauri::State<'_, Client>) -> Result<(), String> {
+  // Ensure that we're not signed out already as otherwise the SDK will panic and kill the thread
+  if client.session_meta().is_none() {
+    return Ok(());
+  }
+
+  match client.matrix_auth().logout().await {
+    Ok(_) => Ok(()),
+    Err(error) => Err(error.to_string())
   }
 }
