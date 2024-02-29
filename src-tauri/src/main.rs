@@ -89,3 +89,18 @@ async fn sign_out(client: tauri::State<'_, Arc<Client>>) -> Result<(), String> {
     Err(error) => Err(error.to_string())
   }
 }
+
+#[tauri::command]
+async fn start_sync(client: tauri::State<'_, Arc<Client>>) -> Result<(), String> {
+  let result = client.sync_once(SyncSettings::default()).await;
+  if result.is_err() {
+    return Err(result.unwrap_err().to_string());
+  }
+
+  let thread_client = Arc::clone(&client);
+  tauri::async_runtime::spawn(async move {
+    let _ = thread_client.sync(SyncSettings::default().token((result.unwrap().next_batch))).await;
+  });
+
+  Ok(())
+}
