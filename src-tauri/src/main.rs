@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use matrix_sdk::{config::SyncSettings, Client};
+use matrix_sdk::{config::SyncSettings, ruma::{api::client::room::create_room::{self, v3::CreationContent}, room::RoomType, PrivOwnedStr}, Client};
 use std::{process, sync::Arc, thread};
 use tauri::Url;
 
@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
 
   tauri::Builder::default()
     .manage(Arc::new(client))
-    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out, start_sync, get_rooms])
+    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out, start_sync, get_rooms, create_room])
     .run(tauri::generate_context!())
     .expect("tauri application should not cause error");
 
@@ -114,4 +114,16 @@ struct FrontendRoom {
 #[tauri::command]
 fn get_rooms(client: tauri::State<'_, Arc<Client>>) -> Vec<FrontendRoom> {
   client.rooms().into_iter().map(|room| FrontendRoom { id: room.room_id().to_string(), name: room.name() }).collect()
+}
+
+#[tauri::command]
+async fn create_room(client: tauri::State<'_, Arc<Client>>) -> Result<String, String> {
+  let mut request = create_room::v3::Request::new();
+  request.name = Some("foobar".to_string());
+  let mut creation_content = CreationContent::default();
+  creation_content.room_type = Some("org.matrix.msc4114.vault".into());
+  match client.create_room(request).await {
+    Ok(room) => Ok(room.room_id().to_string()),
+    Err(error) => Err(error.to_string())
+  }
 }

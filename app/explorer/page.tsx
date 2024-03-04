@@ -1,19 +1,21 @@
 "use client"
 
 import Button from "@/components/Button";
+import Input from "@/components/Input";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export interface IRoom {
-  id: string
-  name: string
+  id: string | undefined
+  name: string | undefined
 }
 
 export default function Explorer(): JSX.Element {
   const router = useRouter();
 
   const [rooms, setRooms] = useState<IRoom[]>([]);
+  const [selection, setSelection] = useState<IRoom | undefined>(undefined);
 
   const fetchRooms = () => {
     invoke("get_rooms")
@@ -27,6 +29,16 @@ export default function Explorer(): JSX.Element {
       .catch(console.error);
   }, []);
 
+  const showRoomCreationForm = () => {
+    setSelection({} as IRoom);
+  };
+
+  const createRoom = (room: IRoom) => {
+    invoke("create_room")
+      .then(console.log)
+      .catch(console.error)
+  };
+
   const signOut = () => {
     invoke("sign_out")
       .then(() => router.push("/"))
@@ -39,11 +51,17 @@ export default function Explorer(): JSX.Element {
         {rooms.map(room => <div key={room.id}>{room.name}</div>)}
       </div>
       <div className="flex-grow flex flex-col justify-center items-center">
-        Room details
+        {selection && <div>
+            <div>
+              Name <Input/>
+            </div>
+            {!selection.id && <Button onClick={ev => createRoom(selection)}>Save</Button>}
+          </div>}
       </div>
     </main>
-    <div className="flex flex-row justify-end p-2">
+    <footer className="flex flex-row justify-between px-4 py-2">
+      <Button onClick={showRoomCreationForm}>New</Button>
       <Button isDestructive={true} onClick={signOut}>Sign out</Button>
-    </div>
+    </footer>
   </div>;
 }
