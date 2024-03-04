@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use matrix_sdk::{config::SyncSettings, Client};
+use matrix_sdk::{config::SyncSettings, Client, Room};
 use std::{process, sync::Arc, thread};
 use tauri::Url;
 
@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
 
   tauri::Builder::default()
     .manage(Arc::new(client))
-    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out, start_sync])
+    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out, start_sync, get_rooms])
     .run(tauri::generate_context!())
     .expect("tauri application should not cause error");
 
@@ -103,4 +103,14 @@ async fn start_sync(client: tauri::State<'_, Arc<Client>>) -> Result<(), String>
   });
 
   Ok(())
+}
+
+#[derive(serde::Serialize)]
+struct FrontendRoom {
+  name: Option<String>
+}
+
+#[tauri::command]
+fn get_rooms(client: tauri::State<'_, Arc<Client>>) -> Vec<FrontendRoom> {
+  client.rooms().into_iter().map(|room| FrontendRoom { name: room.name() }).collect()
 }
