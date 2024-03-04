@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use matrix_sdk::{config::SyncSettings, Client, Room};
+use matrix_sdk::{config::SyncSettings, Client};
 use std::{process, sync::Arc, thread};
 use tauri::Url;
 
@@ -99,7 +99,7 @@ async fn start_sync(client: tauri::State<'_, Arc<Client>>) -> Result<(), String>
 
   let thread_client = Arc::clone(&client);
   tauri::async_runtime::spawn(async move {
-    let _ = thread_client.sync(SyncSettings::default().token((result.unwrap().next_batch))).await;
+    let _ = thread_client.sync(SyncSettings::default().token(result.unwrap().next_batch)).await;
   });
 
   Ok(())
