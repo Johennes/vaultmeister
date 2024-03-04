@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri'
 import Input from '@/components/Input';
 import { useRouter } from 'next/navigation';
+import Button from '@/components/Button';
 
 class Status {
   static initial = new Status(false, null);
@@ -54,12 +55,7 @@ export default function Home(): JSX.Element {
         <Input type="text" placeholder="Home server" value={homeServer} disabled={true} />
         <Input type="text" placeholder="Username" value={username} disabled={status.isLoading} onChange={e => setUsername(e.target.value)} />
         <Input type="password" placeholder="Password" value={password} disabled={status.isLoading} onChange={e => setPassword(e.target.value)} />
-        <input
-          type="submit"
-          className="block w-full rounded-md border-0 py-1.5 px-2 bg-green-700 hover:bg-green-800 text-white font-bold text-sm mb-1"
-          value="Sign in"
-          disabled={status.isLoading}
-          onClick={signIn} />
+        <Button className="w-full" disabled={status.isLoading} onClick={signIn} >Sign in</Button>
       </div>
       {status.error && <div className="text-red-600 px-10 text-center">{status.error}123</div>}
     </main>

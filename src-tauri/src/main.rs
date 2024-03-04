@@ -1,8 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use matrix_sdk::Client;
-use std::{process::{self}, thread};
+use matrix_sdk::{config::SyncSettings, Client};
+use std::{process, sync::Arc, thread};
 use tauri::Url;
 
 #[tokio::main]
@@ -16,8 +16,8 @@ async fn main() -> anyhow::Result<()> {
     .await?;
 
   tauri::Builder::default()
-    .manage(client)
-    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out])
+    .manage(Arc::new(client))
+    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out, start_sync, get_rooms])
     .run(tauri::generate_context!())
     .expect("tauri application should not cause error");
 
@@ -60,12 +60,12 @@ fn version() -> String {
 }
 
 #[tauri::command]
-fn homeserver(client: tauri::State<Client>) -> String {
+fn homeserver(client: tauri::State<Arc<Client>>) -> String {
   client.homeserver().to_string()
 }
 
 #[tauri::command]
-async fn sign_in(client: tauri::State<'_, Client>, username: String, password: String) -> Result<(), String> {
+async fn sign_in(client: tauri::State<'_, Arc<Client>>, username: String, password: String) -> Result<(), String> {
   // Ensure that we're not signed in already as otherwise the SDK will panic and kill the thread
   if client.session_meta().is_some() {
     return Ok(());
@@ -78,7 +78,7 @@ async fn sign_in(client: tauri::State<'_, Client>, username: String, password: S
 }
 
 #[tauri::command]
-async fn sign_out(client: tauri::State<'_, Client>) -> Result<(), String> {
+async fn sign_out(client: tauri::State<'_, Arc<Client>>) -> Result<(), String> {
   // Ensure that we're not signed out already as otherwise the SDK will panic and kill the thread
   if client.session_meta().is_none() {
     return Ok(());
@@ -88,4 +88,30 @@ async fn sign_out(client: tauri::State<'_, Client>) -> Result<(), String> {
     Ok(_) => Ok(()),
     Err(error) => Err(error.to_string())
   }
+}
+
+#[tauri::command]
+async fn start_sync(client: tauri::State<'_, Arc<Client>>) -> Result<(), String> {
+  let result = client.sync_once(SyncSettings::default()).await;
+  if result.is_err() {
+    return Err(result.unwrap_err().to_string());
+  }
+
+  let thread_client = Arc::clone(&client);
+  tauri::async_runtime::spawn(async move {
+    let _ = thread_client.sync(SyncSettings::default().token(result.unwrap().next_batch)).await;
+  });
+
+  Ok(())
+}
+
+#[derive(serde::Serialize)]
+struct FrontendRoom {
+  id: String,
+  name: Option<String>
+}
+
+#[tauri::command]
+fn get_rooms(client: tauri::State<'_, Arc<Client>>) -> Vec<FrontendRoom> {
+  client.rooms().into_iter().map(|room| FrontendRoom { id: room.room_id().to_string(), name: room.name() }).collect()
 }
