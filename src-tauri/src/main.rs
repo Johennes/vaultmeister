@@ -107,10 +107,11 @@ async fn start_sync(client: tauri::State<'_, Arc<Client>>) -> Result<(), String>
 
 #[derive(serde::Serialize)]
 struct FrontendRoom {
+  id: String,
   name: Option<String>
 }
 
 #[tauri::command]
 fn get_rooms(client: tauri::State<'_, Arc<Client>>) -> Vec<FrontendRoom> {
-  client.rooms().into_iter().map(|room| FrontendRoom { name: room.name() }).collect()
+  client.rooms().into_iter().map(|room| FrontendRoom { id: room.room_id().to_string(), name: room.name() }).collect()
 }
