@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use matrix_sdk::{config::SyncSettings, ruma::{api::client::room::create_room::{self, v3::CreationContent}, room::RoomType, PrivOwnedStr}, Client};
+use matrix_sdk::{config::SyncSettings, ruma::{api::client::room::create_room::{self, v3::CreationContent}}, Client};
 use std::{process, sync::Arc, thread};
 use tauri::Url;
 
