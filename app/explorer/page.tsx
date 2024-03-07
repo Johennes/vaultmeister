@@ -33,9 +33,12 @@ export default function Explorer(): JSX.Element {
     setSelection({} as IRoom);
   };
 
-  const createRoom = (room: IRoom) => {
-    invoke("create_room")
-      .then(console.log)
+  const createVault = (room: IRoom) => {
+    invoke("create_vault", { name: room.name ?? "" })
+      .then(roomId => {
+        console.log(roomId);
+        fetchRooms();
+      })
       .catch(console.error)
   };
 
@@ -55,7 +58,7 @@ export default function Explorer(): JSX.Element {
             <div>
               Name <Input/>
             </div>
-            {!selection.id && <Button onClick={ev => createRoom(selection)}>Save</Button>}
+            {!selection.id && <Button onClick={ev => createVault(selection)}>Save</Button>}
           </div>}
       </div>
     </main>

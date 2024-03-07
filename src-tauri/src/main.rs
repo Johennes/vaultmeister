@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
 
   tauri::Builder::default()
     .manage(Arc::new(client))
-    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out, start_sync, get_rooms, create_room])
+    .invoke_handler(tauri::generate_handler![version, homeserver, sign_in, sign_out, start_sync, get_rooms, create_vault])
     .run(tauri::generate_context!())
     .expect("tauri application should not cause error");
 
@@ -117,9 +117,9 @@ fn get_rooms(client: tauri::State<'_, Arc<Client>>) -> Vec<FrontendRoom> {
 }
 
 #[tauri::command]
-async fn create_room(client: tauri::State<'_, Arc<Client>>) -> Result<String, String> {
+async fn create_vault(client: tauri::State<'_, Arc<Client>>, name: String) -> Result<String, String> {
   let mut request = create_room::v3::Request::new();
-  request.name = Some("foobar".to_string());
+  request.name = Some(name.to_string());
   let mut creation_content = CreationContent::default();
   creation_content.room_type = Some("org.matrix.msc4114.vault".into());
   match client.create_room(request).await {
